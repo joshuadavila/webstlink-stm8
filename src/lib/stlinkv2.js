@@ -25,8 +25,25 @@ const STLINK_MODE_BOOTLOADER = 0x04;
 
 const STLINK_DFU_EXIT = 0x07;
 
+const STLINK_SWIM_OK = 0x00;
+const STLINK_SWIM_BUSY = 0x01;
+const STLINK_SWIM_NO_RESPONSE = 0x04;   // Target did not respond. SWIM not active?
+const STLINK_SWIM_BAD_STATE = 0x05;     // ??
+
 const STLINK_SWIM_ENTER = 0x00;
 const STLINK_SWIM_EXIT = 0x01;
+const STLINK_SWIM_READ_CAP = 0x02;
+const STLINK_SWIM_SPEED = 0x03;
+const STLINK_SWIM_ENTER_SEQ = 0x04;
+const STLINK_SWIM_GEN_RST = 0x05;
+const STLINK_SWIM_RESET = 0x06;
+const STLINK_SWIM_ASSERT_RESET = 0x07;
+const STLINK_SWIM_DEASSERT_RESET = 0x08;
+const STLINK_SWIM_READSTATUS = 0x09;
+const STLINK_SWIM_WRITEMEM = 0x0a;
+const STLINK_SWIM_READMEM = 0x0b;
+const STLINK_SWIM_READBUF = 0x0c;
+const STLINK_SWIM_READBUFSIZE = 0x0d;
 
 const STLINK_DEBUG_ENTER_JTAG = 0x00;
 const STLINK_DEBUG_STATUS = 0x01;
@@ -86,6 +103,7 @@ const STLINK_DEBUG_APIV2_SWD_SET_FREQ_MAP = [
     [5000,  798]
 ];
 
+
 export default class Stlink {
     constructor(connector, dbg) {
         this._connector = connector;
@@ -102,11 +120,26 @@ export default class Stlink {
         await this.read_version();
         await this.leave_state();
         await this.read_target_voltage();
-        if (this._ver_jtag >= 22) {
-            await this.set_swd_freq(swd_frequency);
-        }
-        await this.enter_debug_swd();
+        // if (this._ver_jtag >= 22) {
+        //     await this.set_swd_freq(swd_frequency);
+        // }
+        //await this.enter_debug_swd();
+        await this.enter_debug_swim();
         await this.read_coreid();
+    }
+
+
+    async enter_debug_swim() {
+        // enter swim mode command
+        await this._connector.xfer([STLINK_SWIM_COMMAND, STLINK_SWIM_ENTER]);
+        // 
+        let rx = await this._connector.xfer([STLINK_SWIM_COMMAND, STLINK_SWIM_READBUFSIZE], {"rx_len": 8});
+        let bufsize = rx.getUint16(0);
+        //
+        await this._connector.xfer([STLINK_SWIM_COMMAND, STLINK_SWIM_ASSERT_RESET]);
+        //
+        await this._connector.xfer([STLINK_SWIM_COMMAND, STLINK_SWIM_ENTER_SEQ]);
+        this._debug("Entered SWIM mode");
     }
 
     async clean_exit() {
@@ -132,6 +165,7 @@ export default class Stlink {
         this._ver_mass = ((dev_ver === "V2-1") ? (ver & 0x3f) : null);
         this._ver_api = ((this._ver_jtag > 11) ? 2 : 1);
         this._ver_str = `${dev_ver} V${this._ver_stlink}J${this._ver_jtag}`;
+
         if (dev_ver === "V2") {
             this._ver_str += ("S" + this._ver_swim);
         }
@@ -186,8 +220,8 @@ export default class Stlink {
     }
 
     async read_coreid() {
-        let rx = await this._connector.xfer([STLINK_DEBUG_COMMAND, STLINK_DEBUG_READCOREID], {"rx_len": 4});
-        this._coreid = rx.getUint32(0, true);
+        // let rx = await this._connector.xfer([STLINK_DEBUG_COMMAND, STLINK_DEBUG_READCOREID], {"rx_len": 4});
+        // this._coreid = rx.getUint32(0, true);
     }
 
     get coreid() {

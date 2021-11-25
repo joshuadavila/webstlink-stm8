@@ -627,4 +627,6 @@ document.addEventListener('DOMContentLoaded', event => {
             await on_successful_attach(stlink, curr_device);
         }
     });
+
+    
 });
