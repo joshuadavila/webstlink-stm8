@@ -16,7 +16,8 @@ import {
 } from './lib/util.js';
 
 
-const CPUID_REG = 0xe000ed00;
+// const CPUID_REG = 0xe000ed00;
+const CPUID_REG = 0x67F0;   // taken from swim_conf database
 
 function H24(v) {
     return hex_string(v, 3);

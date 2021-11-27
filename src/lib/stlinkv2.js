@@ -222,6 +222,11 @@ export default class Stlink {
     async read_coreid() {
         // let rx = await this._connector.xfer([STLINK_DEBUG_COMMAND, STLINK_DEBUG_READCOREID], {"rx_len": 4});
         // this._coreid = rx.getUint32(0, true);
+    
+        await this._connector.xfer([STLINK_SWIM_COMMAND, STLINK_SWIM_READMEM, 0x00, 0x04, 0x00, 0x00, 0x67, 0xF0]);
+        await this._connector.xfer([STLINK_SWIM_COMMAND, STLINK_SWIM_READSTATUS], {"rx_len": 4});
+        let rx = await this._connector.xfer([STLINK_SWIM_COMMAND, STLINK_SWIM_READBUF], {"rx_len": 8});
+        this._coreid = rx.getUint32(0, false);
     }
 
     get coreid() {
