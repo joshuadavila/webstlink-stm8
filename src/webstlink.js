@@ -17,7 +17,7 @@ import {
 
 
 // const CPUID_REG = 0xe000ed00;
-const CPUID_REG = 0x67F0;   // taken from swim_conf database
+const CPUID_REG = 0x4000;
 
 function H24(v) {
     return hex_string(v, 3);
@@ -363,36 +363,36 @@ export default class WebStlink {
         }
         await this._mutex.lock();
         try {
-            await this.find_mcus_by_core();
-            this._dbg.info("CORE:   " + this._mcus_by_core.core);
-            await this.find_mcus_by_devid();
-            await this.find_mcus_by_flash_size();
-            if (expected_cpus.count > 0) {
-                // filter detected MCUs by selected MCU type
-                this.filter_detected_cpu(expected_cpus);
-            }
-            this._dbg.info("MCU:    " + this._mcus.map(mcu => mcu.type).join("/"));
-            this._dbg.info(`FLASH:  ${this._flash_size}KB`);
-            await this.find_sram_eeprom_size(pick_cpu);
-            this.load_driver();
-            this._last_cpu_status = null;
+                await this.find_mcus_by_core();
+                this._dbg.info("CORE:   " + this._mcus_by_core.core);
+                await this.find_mcus_by_devid();
+                await this.find_mcus_by_flash_size();
+                if (expected_cpus.count > 0) {
+                    // filter detected MCUs by selected MCU type
+                    this.filter_detected_cpu(expected_cpus);
+                }
+                this._dbg.info("MCU:    " + this._mcus.map(mcu => mcu.type).join("/"));
+                this._dbg.info(`FLASH:  ${this._flash_size}KB`);
+                await this.find_sram_eeprom_size(pick_cpu);
+                this.load_driver();
+                this._last_cpu_status = null;
 
-            const info = {
-                part_no: this._mcus_by_core.part_no,
-                core: this._mcus_by_core.core,
-                dev_id: this._mcus_by_devid.dev_id,
-                type: this._mcu.type,
-                flash_size: this._flash_size,
-                sram_size: this._sram_size,
-                flash_start: this._driver.FLASH_START,
-                sram_start: this._driver.SRAM_START,
-                eeprom_size: this._eeprom_size,
-                freq: this._mcu.freq,
-            };
+                const info = {
+                    part_no: this._mcus_by_core.part_no,
+                    core: this._mcus_by_core.core,
+                    dev_id: this._mcus_by_devid.dev_id,
+                    type: this._mcu.type,
+                    flash_size: this._flash_size,
+                    sram_size: this._sram_size,
+                    flash_start: this._driver.FLASH_START,
+                    sram_start: this._driver.SRAM_START,
+                    eeprom_size: this._eeprom_size,
+                    freq: this._mcu.freq,
+                };
 
-            this._cache = new TargetCache(this);
+                this._cache = new TargetCache(this);
 
-            return info;
+                return info;
         } finally {
             this._mutex.unlock();
         }

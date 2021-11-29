@@ -120,25 +120,24 @@ export default class Stlink {
         await this.read_version();
         await this.leave_state();
         await this.read_target_voltage();
-        // if (this._ver_jtag >= 22) {
-        //     await this.set_swd_freq(swd_frequency);
-        // }
-        //await this.enter_debug_swd();
+
         await this.enter_debug_swim();
         await this.read_coreid();
     }
 
 
     async enter_debug_swim() {
+
         // enter swim mode command
-        await this._connector.xfer([STLINK_SWIM_COMMAND, STLINK_SWIM_ENTER]);
+        await this._connector.xfer([STLINK_SWIM_COMMAND, STLINK_SWIM_ENTER]);                               // 0xF4, 0x00
         // 
-        let rx = await this._connector.xfer([STLINK_SWIM_COMMAND, STLINK_SWIM_READBUFSIZE], {"rx_len": 8});
+        let rx = await this._connector.xfer([STLINK_SWIM_COMMAND, STLINK_SWIM_READBUFSIZE], {"rx_len": 2}); // 0xF4, 0x0d
         let bufsize = rx.getUint16(0);
         //
-        await this._connector.xfer([STLINK_SWIM_COMMAND, STLINK_SWIM_ASSERT_RESET]);
+        await this._connector.xfer([STLINK_SWIM_COMMAND, STLINK_SWIM_ASSERT_RESET]);                        //0xF4, 0x07
         //
-        await this._connector.xfer([STLINK_SWIM_COMMAND, STLINK_SWIM_ENTER_SEQ]);
+        await this._connector.xfer([STLINK_SWIM_COMMAND, STLINK_SWIM_ENTER_SEQ]);                           //0xF4, 0x04
+        //
         this._debug("Entered SWIM mode");
     }
 
@@ -209,7 +208,7 @@ export default class Stlink {
     }
 
     async read_target_voltage() {
-        let rx = await this._connector.xfer([STLINK_GET_TARGET_VOLTAGE], {"rx_len": 8});
+        let rx = await this._connector.xfer([STLINK_GET_TARGET_VOLTAGE], {"rx_len": 8}); //0xF7
         let a0 = rx.getUint32(0, true);
         let a1 = rx.getUint32(4, true);
         this._target_voltage = (a0 !== 0) ? (2 * a1 * 1.2 / a0) : null;
@@ -220,12 +219,66 @@ export default class Stlink {
     }
 
     async read_coreid() {
+
         // let rx = await this._connector.xfer([STLINK_DEBUG_COMMAND, STLINK_DEBUG_READCOREID], {"rx_len": 4});
         // this._coreid = rx.getUint32(0, true);
-    
+        
+        await this._connector.xfer([STLINK_SWIM_COMMAND, 0x02, 0x01], {"rx_len": 8});
+        await this._connector.xfer([STLINK_SWIM_COMMAND, 0x07, 0x01]);                  
+        await this._connector.xfer([STLINK_SWIM_COMMAND, 0x09, 0x01], {"rx_len": 4});
+        await this._connector.xfer([STLINK_SWIM_COMMAND, 0x07, 0x01]);
+        await this._connector.xfer([STLINK_SWIM_COMMAND, 0x09, 0x01], {"rx_len": 4});
+        await this._connector.xfer([STLINK_SWIM_COMMAND, 0x08, 0x01]);
+        await this._connector.xfer([STLINK_SWIM_COMMAND, 0x09, 0x01], {"rx_len": 4});
+        await this._connector.xfer([STLINK_SWIM_COMMAND, 0x07, 0x01]);
+        await this._connector.xfer([STLINK_SWIM_COMMAND, 0x09, 0x01], {"rx_len": 4});
+        await this._connector.xfer([STLINK_SWIM_COMMAND, 0x04, 0x01]);
+        await this._connector.xfer([STLINK_SWIM_COMMAND, 0x09, 0x01], {"rx_len": 4});
+        await this._connector.xfer([STLINK_SWIM_COMMAND, 0x09, 0x01], {"rx_len": 4});
+        await this._connector.xfer([STLINK_SWIM_COMMAND, 0x09, 0x01], {"rx_len": 4});
+        await this._connector.xfer([STLINK_SWIM_COMMAND, 0x09, 0x01], {"rx_len": 4});
+        await this._connector.xfer([STLINK_SWIM_COMMAND, 0x09, 0x01], {"rx_len": 4});
+        await this._connector.xfer([STLINK_SWIM_COMMAND, 0x09, 0x01], {"rx_len": 4});
+        await this._connector.xfer([STLINK_SWIM_COMMAND, 0x03]);
+        await this._connector.xfer([STLINK_SWIM_COMMAND, 0x09], {"rx_len": 4});
+        await this._connector.xfer([STLINK_SWIM_COMMAND, 0x05]);
+        await this._connector.xfer([STLINK_SWIM_COMMAND, 0x09], {"rx_len": 4});
+        await this._connector.xfer([STLINK_SWIM_COMMAND, 0x0A, 0x00, 0x01, 0x00, 0x00, 0x7F, 0x80, 0xA0]);
+        await this._connector.xfer([STLINK_SWIM_COMMAND, 0x09, 0x00, 0x01, 0x00, 0x00, 0x7F, 0x80, 0xA0], {"rx_len": 4});
+        await this._connector.xfer([STLINK_SWIM_COMMAND, 0x08, 0x00, 0x01, 0x00, 0x00, 0x7F, 0x80, 0xA0]);
+        await this._connector.xfer([STLINK_SWIM_COMMAND, 0x09, 0x00, 0x01, 0x00, 0x00, 0x7F, 0x80, 0xA0], {"rx_len": 4});
+        await this._connector.xfer([STLINK_SWIM_COMMAND, 0x0B, 0x00, 0x01, 0x00, 0x00, 0x7F, 0x99, 0xA0]);
+        await this._connector.xfer([STLINK_SWIM_COMMAND, 0x09, 0x00, 0x01, 0x00, 0x00, 0x7F, 0x99, 0xA0], {"rx_len": 4});
+
+        // await this._connector.xfer([STLINK_SWIM_COMMAND, 0x0C, 0x00, 0x01, 0x00, 0x00, 0x7F, 0x99, 0xA0]);
+        // await this._connector.xfer([STLINK_SWIM_COMMAND, 0x05, 0x00, 0x01, 0x00, 0x00, 0x7F, 0x99, 0xA0]);
+        // await this._connector.xfer([STLINK_SWIM_COMMAND, 0x09, 0x00, 0x01, 0x00, 0x00, 0x7F, 0x99, 0xA0],{"rx_len": 4});
+        
+        await this._connector.xfer([STLINK_SWIM_COMMAND, 0x05, 0x00, 0x01, 0x00, 0x00, 0x7F, 0x99, 0xA0]);
+        await this._connector.xfer([STLINK_SWIM_COMMAND, 0x09, 0x00, 0x01, 0x00, 0x00, 0x7F, 0x99, 0xA0], {"rx_len": 4});
+        
+        await this._connector.xfer([STLINK_SWIM_COMMAND, 0x0B, 0x00, 0x01, 0x00, 0x00, 0x50, 0xCD, 0xA0]);
+        await this._connector.xfer([STLINK_SWIM_COMMAND, 0x09, 0x00, 0x01, 0x00, 0x00, 0x50, 0xCD, 0xA0], {"rx_len": 4});
+        
+        // await this._connector.xfer([STLINK_SWIM_COMMAND, 0x0C, 0x00, 0x01, 0x00, 0x00, 0x50, 0xCD, 0xA0]);
+        // await this._connector.xfer([STLINK_SWIM_COMMAND, 0x06, 0x00, 0x01, 0x00, 0x00, 0x50, 0xCD, 0xA0]);
+        // await this._connector.xfer([STLINK_SWIM_COMMAND, 0x09, 0x00, 0x01, 0x00, 0x00, 0x50, 0xCD, 0xA0], {"rx_len": 4});
+        
+        await this._connector.xfer([STLINK_SWIM_COMMAND, 0x0A, 0x00, 0x01, 0x00, 0x00, 0x7F, 0x80, 0xB0]);
+        await this._connector.xfer([STLINK_SWIM_COMMAND, 0x09, 0x00, 0x01, 0x00, 0x00, 0x7F, 0x80, 0xB0], {"rx_len": 4});
+        
+        await this._connector.xfer([STLINK_SWIM_COMMAND, 0x03, 0x01, 0x01, 0x00, 0x00, 0x7F, 0x80, 0xB0]);
+        await this._connector.xfer([STLINK_SWIM_COMMAND, 0x09, 0x01, 0x01, 0x00, 0x00, 0x7F, 0x80, 0xB0], {"rx_len": 4});
+        
+        await this._connector.xfer([STLINK_SWIM_COMMAND, 0x0A, 0x00, 0x01, 0x00, 0x00, 0x7F, 0x80, 0xB4]);
+        await this._connector.xfer([STLINK_SWIM_COMMAND, 0x09, 0x00, 0x01, 0x00, 0x00, 0x7F, 0x80, 0xB4], {"rx_len": 4});
+        
+        await this._connector.xfer([STLINK_SWIM_COMMAND, 0x0A, 0x00, 0x01, 0x00, 0x00, 0x50, 0xC6]);
+        await this._connector.xfer([STLINK_SWIM_COMMAND, 0x09, 0x00, 0x01, 0x00, 0x00, 0x50, 0xC6], {"rx_len": 4});
+        
         await this._connector.xfer([STLINK_SWIM_COMMAND, STLINK_SWIM_READMEM, 0x00, 0x04, 0x00, 0x00, 0x67, 0xF0]);
-        await this._connector.xfer([STLINK_SWIM_COMMAND, STLINK_SWIM_READSTATUS], {"rx_len": 4});
-        let rx = await this._connector.xfer([STLINK_SWIM_COMMAND, STLINK_SWIM_READBUF], {"rx_len": 8});
+        await this._connector.xfer([STLINK_SWIM_COMMAND, STLINK_SWIM_READSTATUS, 0x00, 0x04, 0x00, 0x00, 0x67, 0xF0], {"rx_len": 4});
+        let rx = await this._connector.xfer([STLINK_SWIM_COMMAND, STLINK_SWIM_READBUF, 0x00, 0x04, 0x00, 0x00, 0x67, 0xF0], {"rx_len": 8});
         this._coreid = rx.getUint32(0, false);
     }
 
@@ -234,7 +287,7 @@ export default class Stlink {
     }
 
     async leave_state() {
-        let rx = await this._connector.xfer([STLINK_GET_CURRENT_MODE], {"rx_len": 2});
+        let rx = await this._connector.xfer([STLINK_GET_CURRENT_MODE], {"rx_len": 2}); //0xF5
         let state = rx.getUint8(0);
 
         if (state === STLINK_MODE_DFU) {
@@ -292,13 +345,33 @@ export default class Stlink {
         if (addr % 4) {
             throw new Exception("get_mem_short address is not in multiples of 4");
         }
-        let cmd = new ArrayBuffer(6);
+        let cmd = new ArrayBuffer(8);
         let view = new DataView(cmd);
-        view.setUint8(0, STLINK_DEBUG_COMMAND);
-        view.setUint8(1, STLINK_DEBUG_APIV2_READDEBUGREG);
-        view.setUint32(2, addr, true);
-        let rx = await this._connector.xfer(cmd, {"rx_len": 8});
-        return rx.getUint32(4, true);
+        view.setUint8(0, STLINK_SWIM_COMMAND);
+        view.setUint8(1, STLINK_SWIM_READMEM);
+        view.setUint8(2, 0x00);
+        view.setUint8(3, 0x01);
+        view.setUint8(4, 0x00);
+        view.setUint8(5, 0x00);
+        view.setUint16(6, addr, false);
+        await this._connector.xfer(cmd);
+        view.setUint8(0, STLINK_SWIM_COMMAND);
+        view.setUint8(1, STLINK_SWIM_READSTATUS);
+        view.setUint8(2, 0x00);
+        view.setUint8(3, 0x01);
+        view.setUint8(4, 0x00);
+        view.setUint8(5, 0x00);
+        view.setUint16(6, addr, false);
+        await this._connector.xfer(cmd, {"rx_len":4});
+        view.setUint8(0, STLINK_SWIM_COMMAND);
+        view.setUint8(1, STLINK_SWIM_READBUF);
+        view.setUint8(2, 0x00);
+        view.setUint8(3, 0x01);
+        view.setUint8(4, 0x00);
+        view.setUint8(5, 0x00);
+        view.setUint16(6, addr, false);
+        let rx = await this._connector.xfer(cmd, {"rx_len":1});
+        return rx.getUint8(0, true);
     }
 
     async get_debugreg16(addr) {
