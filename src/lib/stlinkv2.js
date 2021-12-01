@@ -350,7 +350,7 @@ export default class Stlink {
         view.setUint8(0, STLINK_SWIM_COMMAND);
         view.setUint8(1, STLINK_SWIM_READMEM);
         view.setUint8(2, 0x00);
-        view.setUint8(3, 0x01);
+        view.setUint8(3, 0x04);
         view.setUint8(4, 0x00);
         view.setUint8(5, 0x00);
         view.setUint16(6, addr, false);
@@ -358,7 +358,7 @@ export default class Stlink {
         view.setUint8(0, STLINK_SWIM_COMMAND);
         view.setUint8(1, STLINK_SWIM_READSTATUS);
         view.setUint8(2, 0x00);
-        view.setUint8(3, 0x01);
+        view.setUint8(3, 0x04);
         view.setUint8(4, 0x00);
         view.setUint8(5, 0x00);
         view.setUint16(6, addr, false);
@@ -366,12 +366,12 @@ export default class Stlink {
         view.setUint8(0, STLINK_SWIM_COMMAND);
         view.setUint8(1, STLINK_SWIM_READBUF);
         view.setUint8(2, 0x00);
-        view.setUint8(3, 0x01);
+        view.setUint8(3, 0x04);
         view.setUint8(4, 0x00);
         view.setUint8(5, 0x00);
         view.setUint16(6, addr, false);
-        let rx = await this._connector.xfer(cmd, {"rx_len":1});
-        return rx.getUint8(0, true);
+        let rx = await this._connector.xfer(cmd, {"rx_len":4});
+        return rx.getUint32(0, false);
     }
 
     async get_debugreg16(addr) {
